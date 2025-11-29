@@ -6,10 +6,7 @@ import torch
 import triton
 import triton.language as tl
 try:
-    try:
     from triton.language.extra.cuda import libdevice
-except ImportError:
-    libdevice = None
 except ImportError:
     # Triton API changed, libdevice might not be available
     libdevice = None
