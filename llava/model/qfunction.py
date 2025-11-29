@@ -2,12 +2,17 @@ import re
 
 import torch
 
+# Optional FP8 quantization imports - not required for standard training
 try:
     from .FloatPointQuantizeTorch import *
     from .FloatPointQuantizeTriton import *
-except:
-    from FloatPointQuantizeTorch import *
-    from FloatPointQuantizeTriton import *
+except ImportError:
+    try:
+        from FloatPointQuantizeTorch import *
+        from FloatPointQuantizeTriton import *
+    except ImportError:
+        # FP8 quantization not available - this is OK for standard training
+        pass
 
 
 def block_cut(input, row_block, column_block, pad_block=False):

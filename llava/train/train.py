@@ -36,8 +36,17 @@ from llava.constants import IGNORE_INDEX
 from llava.data import make_supervised_data_module
 from llava.mm_utils import process_image
 from llava.model import LlavaLlamaConfig, LlavaLlamaModel, LlavaTopDownLlamaConfig, LlavaTopDownLlamaModel
-from llava.model.language_model.fp8linearqwen2 import Qwen2ForCausalLM  # We need this line to register AutoConfig
-from llava.model.language_model.qllava_qllama import QLlavaLlamaModel, quantize_args_to_model_class
+
+# Optional FP8 quantization imports - not needed for standard training
+try:
+    from llava.model.language_model.fp8linearqwen2 import Qwen2ForCausalLM  # We need this line to register AutoConfig
+    from llava.model.language_model.qllava_qllama import QLlavaLlamaModel, quantize_args_to_model_class
+except ImportError as e:
+    import warnings
+    warnings.warn(f"FP8 quantization not available: {e}. This is OK for standard training.")
+    Qwen2ForCausalLM = None
+    QLlavaLlamaModel = None
+    quantize_args_to_model_class = {}  # Empty dict - no FP8 quantization options available
 from llava.train.args import DataArguments, ModelArguments, TrainingArguments
 from llava.train.callbacks.autoresume_callback import AutoResumeCallback
 from llava.train.llava_trainer import LLaVATopDownTrainer, LLaVATrainer, VILADPOTrainer
@@ -551,6 +560,12 @@ def train():
     ## extra configurations
     prepare_config_for_training(config, model_args, training_args, data_args)
 
+    # Set conversation template BEFORE model initialization (tokenizer needs it)
+    if model_args.version in conversation_lib.conv_templates:
+        conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
+    else:
+        conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
+
     if training_args.use_one_logger:
         one_logger_callback_utils.on_model_init_start()
 
@@ -756,10 +771,6 @@ def train():
             tokenizer=tokenizer,
             model=model.llm,
         )
-    if model_args.version in conversation_lib.conv_templates:
-        conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
-    else:
-        conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
 
     vision_tower = model.get_vision_tower()
     if vision_tower is not None:

@@ -26,5 +26,15 @@ TODO:
 3. fp8 infernce example (load directly from a fp8 and fwd)
 4. bind fp8 related configs to QLlamaConfig {"coat_fp8_args": {}}
 """
-from .language_model.fp8linearqwen2 import FP8LinearQwen2Config, FP8LinearQwen2Model
-from .language_model.qllava_qllama import QLlavaLlamaConfig, QLlavaLlamaModel
+# Optional FP8 quantization models - comment out if you get import errors
+try:
+    from .language_model.fp8linearqwen2 import FP8LinearQwen2Config, FP8LinearQwen2Model
+    from .language_model.qllava_qllama import QLlavaLlamaConfig, QLlavaLlamaModel
+except ImportError as e:
+    import warnings
+    warnings.warn(f"FP8 quantization models not available: {e}. This is OK for standard training.")
+    # Define placeholder classes to avoid import errors
+    FP8LinearQwen2Config = None
+    FP8LinearQwen2Model = None
+    QLlavaLlamaConfig = None
+    QLlavaLlamaModel = None
