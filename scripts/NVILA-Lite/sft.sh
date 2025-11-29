@@ -1,8 +1,9 @@
 #!/bin/bash
 
-DEFAULT_RUN_NAME="vila-qwen2-vl-7b-sft"
-DEFAULT_GLOBAL_TRAIN_BATCH_SIZE=2048
-DEFAULT_GRADIENT_ACCUMULATION_STEPS=2
+# Use environment variables if set, otherwise use defaults
+DEFAULT_RUN_NAME=${DEFAULT_RUN_NAME:-"vila-qwen2-vl-7b-sft"}
+DEFAULT_GLOBAL_TRAIN_BATCH_SIZE=${DEFAULT_GLOBAL_TRAIN_BATCH_SIZE:-2048}
+DEFAULT_GRADIENT_ACCUMULATION_STEPS=${DEFAULT_GRADIENT_ACCUMULATION_STEPS:-2}
 
 STAGE_PATH=${1:-"runs/train/nvila-8b-pretrain/model"}
 DATA_MIXTURE=${2:-"nvila-pretrain"}
@@ -25,7 +26,7 @@ torchrun \
     --nnodes=$NNODES --nproc_per_node=$GPUS_PER_NODE --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT \
     llava/train/train_mem.py \
-        --deepspeed scripts/zero3_offload_inference.json \
+        --deepspeed scripts/zero3.json \
         --model_name_or_path $STAGE_PATH \
         --data_mixture $DATA_MIXTURE \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \
