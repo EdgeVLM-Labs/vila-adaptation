@@ -44,6 +44,19 @@ def tokenize_conversation_legacy(
     no_system_prompt: bool = False,
 ) -> torch.Tensor:
     conv = conversation_lib.default_conversation.copy()
+    
+    # If default conversation is AUTO, try to infer from tokenizer or use vicuna_v1 as fallback
+    if conv.sep_style == conversation_lib.SeparatorStyle.AUTO:
+        # Try to get conversation version from tokenizer name
+        tokenizer_name = getattr(tokenizer, 'name_or_path', '').lower()
+        if 'llama-3' in tokenizer_name or 'llama3' in tokenizer_name:
+            conv = conversation_lib.conv_templates['llama_3'].copy()
+        elif 'hermes' in tokenizer_name:
+            conv = conversation_lib.conv_templates['hermes-2'].copy()
+        else:
+            # Default to vicuna_v1 for most models including VILA1.5
+            conv = conversation_lib.conv_templates['vicuna_v1'].copy()
+    
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
     if no_system_prompt:
@@ -107,6 +120,16 @@ def tokenize_conversation(
     if no_system_prompt:
         conversation = [{"role": "system", "content": ""}] + conversation
 
+    # Check if tokenizer has chat_template, otherwise use legacy mode
+    if not hasattr(tokenizer, 'chat_template') or tokenizer.chat_template is None:
+        return tokenize_conversation_legacy(
+            messages,
+            tokenizer,
+            add_generation_prompt=add_generation_prompt,
+            overrides=overrides,
+            no_system_prompt=no_system_prompt,
+        )
+    
     text = tokenizer.apply_chat_template(
         conversation,
         add_generation_prompt=add_generation_prompt,

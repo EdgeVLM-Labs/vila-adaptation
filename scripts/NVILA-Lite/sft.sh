@@ -10,13 +10,22 @@ OUTPUT_DIR=${3:-"runs/train/nvila-8b-sft"}
 
 source scripts/setups/train.sh
 
+# Override GPU count if DEFAULT_GPUS_PER_NODE is set
+if [ ! -z "$DEFAULT_GPUS_PER_NODE" ]; then
+    GPUS_PER_NODE=$DEFAULT_GPUS_PER_NODE
+    echo "Overriding GPUS_PER_NODE = $GPUS_PER_NODE"
+    # Recalculate batch size with new GPU count
+    PER_DEVICE_TRAIN_BATCH_SIZE=$((GLOBAL_TRAIN_BATCH_SIZE / NNODES / GPUS_PER_NODE / GRADIENT_ACCUMULATION_STEPS))
+    echo "Recalculated PER_DEVICE_TRAIN_BATCH_SIZE = $PER_DEVICE_TRAIN_BATCH_SIZE"
+fi
+
 STAGE2_PATH=$1
 
 torchrun \
     --nnodes=$NNODES --nproc_per_node=$GPUS_PER_NODE --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT \
     llava/train/train_mem.py \
-        --deepspeed scripts/zero3.json \
+        --deepspeed scripts/zero3_offload_inference.json \
         --model_name_or_path $STAGE_PATH \
         --data_mixture $DATA_MIXTURE \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \

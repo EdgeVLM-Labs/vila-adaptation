@@ -9,3 +9,9 @@ QVEDTest:
     data_path: /dataset/qved/dataset.json
     media_dir: /dataset/qved
     is_video: true 
+
+SampleQA:
+    _target_: llava.data.LLaVADataset
+    data_path: ./llava/data/registry/datasets/dataset/dataset.json
+    media_dir: ./llava/data/registry/datasets/dataset/videos
+    is_video: true 

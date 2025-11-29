@@ -5,7 +5,10 @@ import numpy as np
 import torch
 import triton
 import triton.language as tl
-from triton.language.extra.cuda import libdevice
+try:
+    from triton.language.extra.cuda import libdevice
+except ImportError:
+    libdevice = None
 
 
 def floatExMy_quantize_triton(x, e_bit, m_bit, stochastic):

@@ -19,7 +19,10 @@ import torch
 # 4 block
 import triton
 import triton.language as tl
-from triton.language.extra.cuda import libdevice
+try:
+    from triton.language.extra.cuda import libdevice
+except ImportError:
+    libdevice = None
 
 from .common import get_configs_io_block
 

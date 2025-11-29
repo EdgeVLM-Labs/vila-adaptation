@@ -1,0 +1,28 @@
+[
+    {
+        "image": "videos/00000000.mp4",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Give some feedback about this exercise"
+            },
+            {
+                "from": "gpt",
+                "value": "elbow plank - stopping early"
+            }
+        ]
+    },
+    {
+        "image": "videos/00000001.mp4",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "Give some feedback about this exercise"
+            },
+            {
+                "from": "gpt",
+                "value": "elbow plank - arms facing inward and legs and hips on the floor"
+            }
+        ]
+    }
+]

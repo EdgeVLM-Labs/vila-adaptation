@@ -5,7 +5,14 @@ import numpy as np
 import torch
 import triton
 import triton.language as tl
-from triton.language.extra.cuda import libdevice
+try:
+    try:
+    from triton.language.extra.cuda import libdevice
+except ImportError:
+    libdevice = None
+except ImportError:
+    # Triton API changed, libdevice might not be available
+    libdevice = None
 
 segment_size = 1024**3
 

@@ -17,7 +17,10 @@
 import torch
 import triton
 import triton.language as tl
-from triton.language.extra.cuda import libdevice
+try:
+    from triton.language.extra.cuda import libdevice
+except ImportError:
+    libdevice = None
 
 try:
     from ._division import _stochastic_rounding
