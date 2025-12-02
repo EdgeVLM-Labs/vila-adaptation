@@ -6,6 +6,7 @@ def split_dataset(input_path, train_path, test_path, train_ratio=0.8):
     with open(input_path, 'r') as f:
         data = json.load(f)
 
+    random.seed(42)  # Ensures consistent splits every time
     random.shuffle(data)
     split_idx = int(len(data) * train_ratio)
     train_data = data[:split_idx]
