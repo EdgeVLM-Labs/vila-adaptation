@@ -9,4 +9,9 @@ export WANDB_NAME="finetune-vila1.5-3b-qved"
 
 bash scripts/NVILA-Lite/sft.sh \
     Efficient-Large-Model/VILA1.5-3b \
-    QVED-dataset
+    QVED-dataset \
+    runs/train/vila-3b-exercise-finetune
+
+# Upload to Hugging Face after training
+echo "Training completed. Uploading model to Hugging Face..."
+huggingface-cli upload EdgeVLM-Labs/VILA-3B-Exercise-Evaluation runs/train/vila-3b-exercise-finetune/model --include="*"
