@@ -13,7 +13,7 @@ def convert_to_dataset_format(input_path, output_path):
         labels = item.get("labels_descriptive", [])
         gpt_value = " ".join(labels) if isinstance(labels, list) else str(labels)
         entry = {
-            "video": "./videos/" + video,
+            "video": "./llava/data/registry/datasets/dataset/videos/" + video,
             "conversations": [
                 {
                     "from": "human",

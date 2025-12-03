@@ -4,14 +4,14 @@
 #     num_instances: 10000
 #     comments: dummy dataset for testing
 
-QVEDTest:
-    _target_: llava.data.LLaVADataset
-    data_path: /dataset/qved/dataset.json
-    media_dir: /dataset/qved
-    is_video: true 
+# QVEDTest:
+#     _target_: llava.data.LLaVADataset
+#     data_path: /dataset/qved/dataset.json
+#     media_dir: /dataset/qved
+#     is_video: true 
 
-SampleQA:
+QVED-dataset:
     _target_: llava.data.LLaVADataset
-    data_path: ./llava/data/registry/datasets/dataset/dataset.json
+    data_path: ./llava/data/registry/datasets/dataset/train.json
     media_dir: ./llava/data/registry/datasets/dataset/videos
-    is_video: true 
+    is_video: true

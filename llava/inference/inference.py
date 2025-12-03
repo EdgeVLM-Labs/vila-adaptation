@@ -46,9 +46,65 @@ def main(json_path, csv_path, model_path):
     if limit is not None:
         data = data[:limit]
 
-    with open(csv_path, "w", newline='') as csvfile:
+    import os
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+    file_exists = os.path.isfile(csv_path)
+    with open(csv_path, "a", newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["video", "ground_truth", "model_output", "memory_usage_mb", "inference_time_sec"])
+        if not file_exists:
+            writer.writerow(["video", "ground_truth", "model_output", "memory_usage_mb", "inference_time_sec"])
+
+        for entry in data:
+            video = entry.get("video", "")
+            ground_truth = ""
+            # Extract ground truth from conversations
+            for conv in entry.get("conversations", []):
+                if conv.get("from") == "gpt":
+                    ground_truth = conv.get("value", "")
+                    break
+
+            # Run inference
+            model_output, memory_usage, inference_time = run_inference(
+                model_path,
+                "vicuna_v1",
+                PROMPT,
+                video
+            )
+
+            writer.writerow([video, ground_truth, model_output, f"{memory_usage:.2f}", f"{inference_time:.2f}"])
+            print(f"Processed {video}")
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) not in [4, 5]:
+        print("Usage: python inference_script.py <input_json> <output_csv> <model_path> [limit]")
+        sys.exit(1)
+    main(sys.argv[1], sys.argv[2], sys.argv[3])   #model_output, memory_usage, inference_time
+
+
+def main(json_path, csv_path, model_path):
+    with open(json_path, "r") as f:
+        data = json.load(f)
+
+    import sys
+    limit = None
+    if len(sys.argv) == 5:
+        try:
+            limit = int(sys.argv[4])
+        except ValueError:
+            print("Invalid limit argument, must be an integer.")
+            sys.exit(1)
+
+    if limit is not None:
+        data = data[:limit]
+
+    import os
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+    file_exists = os.path.isfile(csv_path)
+    with open(csv_path, "a", newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if not file_exists:
+            writer.writerow(["video", "ground_truth", "model_output", "memory_usage_mb", "inference_time_sec"])
 
         for entry in data:
             video = entry.get("video", "")

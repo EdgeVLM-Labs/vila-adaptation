@@ -6,4 +6,4 @@ export DEFAULT_GPUS_PER_NODE=1
 
 bash scripts/NVILA-Lite/sft.sh \
     Efficient-Large-Model/VILA1.5-3b \
-    SampleQA
+    QVED-dataset
