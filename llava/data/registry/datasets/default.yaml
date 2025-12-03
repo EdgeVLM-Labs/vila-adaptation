@@ -13,5 +13,5 @@
 QVED-dataset:
     _target_: llava.data.LLaVADataset
     data_path: ./llava/data/registry/datasets/dataset/train.json
-    media_dir: ./llava/data/registry/datasets/dataset/videos
+    media_dir: .
     is_video: true
