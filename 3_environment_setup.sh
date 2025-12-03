@@ -15,8 +15,8 @@ set -e
 # fi
 
 
-echo ">>> Activating environment..."
-conda activate vila
+# echo ">>> Activating environment..."
+# conda activate vila
 
 # -------------------------------
 # Install dependencies
@@ -26,8 +26,8 @@ conda install -c nvidia cuda-toolkit -y
 
 echo ">>> Installing PS3 Torch..."
 
-pip install --upgrade pip
-pip install ps3-torch
+# pip install --upgrade pip
+# pip install ps3-torch
 pip install hf_transfer
 
 # This is required to enable PEP 660 support
