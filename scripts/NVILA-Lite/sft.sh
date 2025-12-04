@@ -32,7 +32,7 @@ torchrun \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \
         --mm_vision_select_feature cls_patch \
         --mm_projector mlp_downsample_3x3_fix \
-        --tune_vision_tower True \
+        --tune_vision_tower False \
         --tune_mm_projector True \
         --tune_language_model True \
         --mm_vision_select_layer -2 \
@@ -48,13 +48,23 @@ torchrun \
         --save_strategy steps \
         --save_steps 100 \
         --save_total_limit 1 \
-        --learning_rate 2e-5 \
+        --learning_rate 5e-5 \
         --weight_decay 0. \
         --warmup_ratio 0.03 \
         --lr_scheduler_type cosine \
         --logging_steps 1 \
-        --model_max_length 4096 \
+        --model_max_length 2048 \
         --gradient_checkpointing True \
-        --dataloader_num_workers 16 \
+        --dataloader_num_workers 4 \
+        --num_video_frames 4 \
+        --fps 1.0 \
+        --downsample_video True \
         --vflan_no_system_prompt True \
+        --group_by_modality_length True \
+        --lora_enable True \
+        --lora_llm True \
+        --lora_r 32 \
+        --lora_alpha 32 \
+        --lora_dropout 0.05 \
+        --lora_bias none \
         --report_to wandb
