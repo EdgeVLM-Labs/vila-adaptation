@@ -21,8 +21,8 @@ set -e
 # -------------------------------
 # Install dependencies
 # -------------------------------
-echo ">>> Installing CUDA Toolkit..."
-conda install -c nvidia cuda-toolkit -y
+# echo ">>> Installing CUDA Toolkit..."
+# conda install -c nvidia cuda-toolkit -y
 
 echo ">>> Installing PS3 Torch..."
 
