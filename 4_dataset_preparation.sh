@@ -16,7 +16,7 @@ mkdir -p "$DATASET_DIR"
 mkdir -p "$VIDEOS_DIR"
 
 # 1. Load dataset
-# python "$QVED_DIR/load_dataset.py" "$DATASET_ROOT_DIR"
+python "$QVED_DIR/load_dataset.py" "$DATASET_ROOT_DIR"
 
 # 2. Filter ground truth
 python "$QVED_DIR/filter_ground_truth.py" "$DATASET_ROOT_DIR"
