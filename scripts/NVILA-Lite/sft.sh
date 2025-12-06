@@ -48,7 +48,7 @@ torchrun \
         --save_strategy steps \
         --save_steps 100 \
         --save_total_limit 1 \
-        --learning_rate 5e-5 \
+        --learning_rate 3e-5 \
         --weight_decay 0. \
         --warmup_ratio 0.03 \
         --lr_scheduler_type cosine \
@@ -63,7 +63,7 @@ torchrun \
         --group_by_modality_length True \
         --lora_enable True \
         --lora_llm True \
-        --lora_r 32 \
+        --lora_r 16 \
         --lora_alpha 32 \
         --lora_dropout 0.05 \
         --lora_bias none \

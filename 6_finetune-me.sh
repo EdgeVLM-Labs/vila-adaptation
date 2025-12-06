@@ -1,5 +1,5 @@
 # Optimized for 48GB GPU - can handle larger batch sizes
-export DEFAULT_RUN_NAME="VILA-3B-finetune"
+export DEFAULT_RUN_NAME="VILA-3B-finetune-2"
 export DEFAULT_GLOBAL_TRAIN_BATCH_SIZE=64
 export DEFAULT_GRADIENT_ACCUMULATION_STEPS=4
 export DEFAULT_GPUS_PER_NODE=1
