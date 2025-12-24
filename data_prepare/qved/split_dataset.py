@@ -2,21 +2,21 @@ import json
 import random
 import sys
 
-def split_dataset(input_path, train_path, val_path, test_path, train_ratio=0.7, val_ratio=0.15):
+def split_dataset(input_path, train_path, val_path, test_path, train_ratio=0.6, val_ratio=0.2):
     """
     Split dataset into train/validation/test sets.
-    Default: 70% train, 15% validation, 15% test
+    Default: 60% train, 20% validation, 20% test
     """
     with open(input_path, 'r') as f:
         data = json.load(f)
 
     random.seed(42)  # Ensures consistent splits every time
     random.shuffle(data)
-    
+
     # Calculate split indices
     train_idx = int(len(data) * train_ratio)
     val_idx = int(len(data) * (train_ratio + val_ratio))
-    
+
     # Split the data
     train_data = data[:train_idx]
     val_data = data[train_idx:val_idx]
@@ -29,7 +29,7 @@ def split_dataset(input_path, train_path, val_path, test_path, train_ratio=0.7, 
         json.dump(val_data, f, indent=4)
     with open(test_path, 'w') as f:
         json.dump(test_data, f, indent=4)
-    
+
     print(f"Dataset split completed:")
     print(f"  Total samples: {len(data)}")
     print(f"  Train: {len(train_data)} ({len(train_data)/len(data)*100:.1f}%)")
