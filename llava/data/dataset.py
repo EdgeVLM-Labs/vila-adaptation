@@ -1815,6 +1815,7 @@ def make_supervised_data_module(
     eval_dataset = None
     if data_args.eval_data_mixture:
         eval_dataset = build_dataset(data_args.eval_data_mixture, data_args, training_args, tokenizer)
+        training_args.eval_sample_lens = [len(d) for d in eval_dataset.datasets]
 
     PROCESS_GROUP_MANAGER = get_pg_manager()
     if PROCESS_GROUP_MANAGER is None:
