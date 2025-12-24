@@ -44,13 +44,21 @@ class BasicVideoEncoder(BaseEncoder):
     def forward(self, videos: List[torch.Tensor], config: Dict[str, Any]) -> List[torch.Tensor]:
         # Handle empty video list - this can happen with corrupted/missing validation samples
         if not videos or len(videos) == 0:
-            warnings.warn("Empty video list encountered in video encoder. Skipping.")
+            import logging
+            logging.warning(f"Empty video list encountered in video encoder (received {len(videos) if videos else 0} videos). This may indicate data loading issues.")
+            # Return empty list to skip this batch gracefully
             return []
 
-        # Filter out empty tensors
-        videos = [v for v in videos if v.numel() > 0]
+        # Filter out empty tensors and log any that are found
+        original_count = len(videos)
+        videos = [v for v in videos if v is not None and v.numel() > 0]
+        if len(videos) < original_count:
+            import logging
+            logging.warning(f"Filtered out {original_count - len(videos)} empty video tensors")
+
         if not videos:
-            warnings.warn("All video tensors were empty. Skipping.")
+            import logging
+            logging.warning("All video tensors were empty after filtering. Skipping batch.")
             return []
 
         num_frames = [video.shape[0] for video in videos]
