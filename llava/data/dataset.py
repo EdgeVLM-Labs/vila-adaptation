@@ -1819,6 +1819,8 @@ def make_supervised_data_module(
         eval_dataset = build_dataset(data_args.eval_data_mixture, data_args, training_args, tokenizer)
         training_args.eval_sample_lens = [len(d) for d in eval_dataset.datasets]
         logger.warning(f"Evaluation dataset built with {len(eval_dataset)} samples")
+        logger.warning(f"Eval sub-datasets: {[len(d) for d in eval_dataset.datasets]}")
+        logger.warning(f"Number of sub-datasets in eval: {len(eval_dataset.datasets)}")
     else:
         logger.warning("No eval_data_mixture provided, skipping evaluation dataset")
 
