@@ -496,23 +496,24 @@ class LlavaMetaForCausalLM(ABC):
     ) -> Dict[str, List[torch.Tensor]]:
         embeds = defaultdict(deque)
         for name in media:
-            if self.training:
-                # Gather metainfo of media objects from all ranks
-                info = [{"shape": tensor.shape, "dtype": tensor.dtype} for tensor in media.get(name, [])]
-                infos = list(chain(*distributed.all_gather(info)))
+            # Skip empty media in both training and evaluation
+            if media.get(name) is None or len(media[name]) == 0:
+                if self.training:
+                    # Gather metainfo of media objects from all ranks
+                    info = [{"shape": tensor.shape, "dtype": tensor.dtype} for tensor in media.get(name, [])]
+                    infos = list(chain(*distributed.all_gather(info)))
 
-                # The entire batch does not contain any media objects of this type.
-                if not infos:
-                    continue
+                    # The entire batch does not contain any media objects of this type.
+                    if not infos:
+                        continue
 
-                # Create a dummy tensor to ensure the encoder is called, otherwise the training will hang.
-                if media.get(name) is None or len(media[name]) == 0:
+                    # Create a dummy tensor to ensure the encoder is called, otherwise the training will hang.
                     dummy = torch.zeros(infos[0]["shape"], dtype=infos[0]["dtype"], device=self.device)
                     # Also add a dummy block_sizes
                     if name == "image" and "block_sizes" in media_config[name]:
                         media_config[name]["block_sizes"].append(None)
                     embeds["dummy"].extend(self.encoders[name]([dummy], media_config[name]))
-                    continue
+                continue
             embeds[name] = deque(self.encoders[name](media[name], media_config[name]))
         return embeds
 
