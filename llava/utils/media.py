@@ -120,10 +120,10 @@ def extract_media(
                 text += MEDIA_TOKENS["image"]
             elif isinstance(part, Video):
                 if draft:
-                    media["image"].append(part)
+                    media["video"].append(part)
                 else:
-                    media["image"].extend(_extract_video(part, config))
-                text += MEDIA_TOKENS["image"] * config.num_video_frames
+                    media["video"].append(_extract_video(part, config))
+                text += MEDIA_TOKENS["video"]
             else:
                 raise ValueError(f"Unsupported prompt part type: {type(part)}")
         message["value"] = text

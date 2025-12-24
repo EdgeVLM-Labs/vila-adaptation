@@ -27,7 +27,11 @@ class DataCollator:
                 labels.append(instance["labels"])
                 for name in media:
                     objs = instance.get(name)
-                    objs = objs if objs is not None else []
+                    if objs is None:
+                        # Log when video data is missing
+                        if name == "video" and "video" in str(instance.get("input_ids", "")[:100]):
+                            logger.warning(f"Video field is None but video tokens detected in instance")
+                        objs = []
                     media[name].append([obj for obj in objs])
                 if "block_sizes" in instance:
                     block_sizes.append(instance["block_sizes"])
