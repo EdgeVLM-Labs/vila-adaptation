@@ -66,7 +66,7 @@ torchrun \
         --evaluation_strategy $EVALUATION_STRATEGY \
         --eval_steps $EVAL_STEPS \
         --save_strategy steps \
-        --save_steps 20 \
+        --save_steps 3 \
         --save_total_limit 3 \
         --learning_rate 2e-4 \
         --weight_decay 0. \
