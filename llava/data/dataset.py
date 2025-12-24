@@ -54,6 +54,7 @@ from llava.train.sequence_parallel import (
     extract_local_position_ids,
     get_pg_manager,
 )
+from llava.utils.logging import logger
 from llava.utils.tokenizer import preprocess_conversation
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
