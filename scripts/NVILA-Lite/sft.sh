@@ -26,7 +26,7 @@ torchrun \
     --nnodes=$NNODES --nproc_per_node=$GPUS_PER_NODE --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT \
     llava/train/train_mem.py \
-        --deepspeed scripts/zero3.json \
+        --deepspeed scripts/zero2.json \
         --model_name_or_path $STAGE_PATH \
         --data_mixture $DATA_MIXTURE \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \
@@ -40,22 +40,23 @@ torchrun \
         --mm_use_im_patch_token False \
         --image_aspect_ratio dynamic \
         --bf16 True \
+        --tf32 True \
         --output_dir $OUTPUT_DIR/model \
-        --num_train_epochs 1 \
+        --num_train_epochs 3 \
         --per_device_train_batch_size $PER_DEVICE_TRAIN_BATCH_SIZE \
         --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
         --evaluation_strategy no \
         --save_strategy steps \
-        --save_steps 100 \
-        --save_total_limit 1 \
-        --learning_rate 3e-5 \
+        --save_steps 20 \
+        --save_total_limit 3 \
+        --learning_rate 2e-4 \
         --weight_decay 0. \
-        --warmup_ratio 0.03 \
+        --warmup_ratio 0.05 \
         --lr_scheduler_type cosine \
         --logging_steps 1 \
         --model_max_length 2048 \
         --gradient_checkpointing True \
-        --dataloader_num_workers 4 \
+        --dataloader_num_workers 2 \
         --num_video_frames 4 \
         --fps 1.0 \
         --downsample_video True \
