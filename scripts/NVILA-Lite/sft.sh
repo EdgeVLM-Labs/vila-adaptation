@@ -76,7 +76,7 @@ torchrun \
         --logging_steps 1 \
         --model_max_length 2048 \
         --gradient_checkpointing True \
-        --dataloader_num_workers 2 \
+        --dataloader_num_workers 1 \
         --num_video_frames 4 \
         --fps 1.0 \
         --downsample_video True \

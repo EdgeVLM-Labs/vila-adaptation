@@ -1814,8 +1814,12 @@ def make_supervised_data_module(
     # Build evaluation dataset if eval_data_mixture is provided
     eval_dataset = None
     if data_args.eval_data_mixture:
+        logger.warning(f"Building evaluation dataset with mixture: {data_args.eval_data_mixture}")
         eval_dataset = build_dataset(data_args.eval_data_mixture, data_args, training_args, tokenizer)
         training_args.eval_sample_lens = [len(d) for d in eval_dataset.datasets]
+        logger.warning(f"Evaluation dataset built with {len(eval_dataset)} samples")
+    else:
+        logger.warning("No eval_data_mixture provided, skipping evaluation dataset")
 
     PROCESS_GROUP_MANAGER = get_pg_manager()
     if PROCESS_GROUP_MANAGER is None:
