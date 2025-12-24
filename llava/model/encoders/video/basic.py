@@ -1,5 +1,6 @@
 from functools import partial
 from typing import Any, Dict, List, Optional
+import warnings
 
 import torch
 
@@ -41,6 +42,17 @@ class BasicVideoEncoder(BaseEncoder):
         return features.flatten(0, 1)
 
     def forward(self, videos: List[torch.Tensor], config: Dict[str, Any]) -> List[torch.Tensor]:
+        # Handle empty video list - this can happen with corrupted/missing validation samples
+        if not videos or len(videos) == 0:
+            warnings.warn("Empty video list encountered in video encoder. Skipping.")
+            return []
+
+        # Filter out empty tensors
+        videos = [v for v in videos if v.numel() > 0]
+        if not videos:
+            warnings.warn("All video tensors were empty. Skipping.")
+            return []
+
         num_frames = [video.shape[0] for video in videos]
         images = torch.cat(videos, dim=0)
         features = self.parent.encode_images(images)

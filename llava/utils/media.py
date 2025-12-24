@@ -40,7 +40,7 @@ def _load_video(video_path: str, *, num_frames: int, fps: float) -> List[PIL.Ima
     # Ensure fps is not None
     if fps is None:
         fps = 0.0
-        
+
     # Load video frames from a directory
     if os.path.isdir(video_path):
         frame_paths = sorted(glob.glob(os.path.join(video_path, "*")))
@@ -69,7 +69,7 @@ def _load_video(video_path: str, *, num_frames: int, fps: float) -> List[PIL.Ima
         timestamps = np.arange(0, duration_sec, 1.0 / fps)
         timestamps = timestamps[:num_frames]  # Clamp
         indices = [int(t * video_fps) for t in timestamps]
-        logger.info(f"timestamps used: {timestamps} with frame numbers {indices}")
+        logger.debug(f"timestamps used: {timestamps} with frame numbers {indices}")
     else:
         indices = np.round(np.linspace(0, frame_count - 1, num_frames)).astype(int)
 
