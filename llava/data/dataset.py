@@ -1811,6 +1811,11 @@ def make_supervised_data_module(
     train_dataset = build_dataset(data_args.data_mixture, data_args, training_args, tokenizer)
     training_args.sample_lens = [len(d) for d in train_dataset.datasets]
 
+    # Build evaluation dataset if eval_data_mixture is provided
+    eval_dataset = None
+    if data_args.eval_data_mixture:
+        eval_dataset = build_dataset(data_args.eval_data_mixture, data_args, training_args, tokenizer)
+
     PROCESS_GROUP_MANAGER = get_pg_manager()
     if PROCESS_GROUP_MANAGER is None:
         data_collator = DataCollator(tokenizer=tokenizer)
@@ -1829,7 +1834,12 @@ def make_supervised_data_module(
             ring_type=ring_type,
         )
 
-    return dict(
+    result = dict(
         train_dataset=train_dataset,
         data_collator=data_collator,
     )
+
+    if eval_dataset is not None:
+        result['eval_dataset'] = eval_dataset
+
+    return result

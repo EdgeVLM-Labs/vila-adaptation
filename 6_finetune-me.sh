@@ -8,10 +8,9 @@ export WANDB_PROJECT="VILA"
 export WANDB_NAME="finetune-vila1.5-3b-qved"
 
 # Add validation dataset support
-# export EVAL_DATA_MIXTURE="QVED-dataset-val"  # Validation dataset
-# export EVAL_STEPS=50  # Evaluate every 50 steps
-# export SAVE_STEPS=100  # Save every 100 steps
-# export EVALUATION_STRATEGY="steps"  # Enable evaluation
+export EVAL_DATA_MIXTURE="QVED-dataset-val"  # Validation dataset
+export EVAL_STEPS=50  # Evaluate every 50 steps
+export EVALUATION_STRATEGY="steps"  # Enable evaluation
 
 bash scripts/NVILA-Lite/sft.sh \
     Efficient-Large-Model/VILA1.5-3b \
