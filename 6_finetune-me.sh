@@ -19,5 +19,5 @@ bash scripts/NVILA-Lite/sft.sh \
     runs/train/vila-3b-exercise-finetune
 
 # Upload to Hugging Face after training
-echo "Training completed. Uploading model to Hugging Face..."
-huggingface-cli upload EdgeVLM-Labs/VILA1.5-3B-finetuned-500 runs/train/vila-3b-exercise-finetune/model --include="*"
+# echo "Training completed. Uploading model to Hugging Face..."
+# huggingface-cli upload EdgeVLM-Labs/VILA1.5-3B-finetuned-500 runs/train/vila-3b-exercise-finetune/model --include="*"
