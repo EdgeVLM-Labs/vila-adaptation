@@ -62,6 +62,7 @@ pip install protobuf==3.20.*
 pip install peft==0.10.0
 pip install triton==3.1.0
 
+
 # Install vidaug for video augmentation
 pip install vidaug
 
@@ -73,4 +74,19 @@ git clone https://github.com/NVlabs/PS3.git
 cd PS3
 pip install -e .
 cd ..
+
+# Install libraries for evaluation and report generation
+pip install openpyxl
+pip install scikit-learn
+pip install evaluate
+pip install sentence-transformers
+
+# Initialize WandB
+echo "🔑 Logging into WandB..."
+wandb login
+
+# Initialize HuggingFace Hub
+echo "🤗 Logging into HuggingFace Hub..."
+hf auth login
+
 echo ">>> Environment setup completed."

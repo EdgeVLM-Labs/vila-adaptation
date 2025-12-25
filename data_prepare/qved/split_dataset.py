@@ -2,10 +2,10 @@ import json
 import random
 import sys
 
-def split_dataset(input_path, train_path, val_path, test_path, train_ratio=0.7, val_ratio=0.15):
+def split_dataset(input_path, train_path, val_path, test_path, train_ratio=0.6, val_ratio=0.2):
     """
     Split dataset into train/validation/test sets.
-    Default: 70% train, 15% validation, 15% test
+    Default: 60% train, 20% validation, 20% test
     """
     with open(input_path, 'r') as f:
         data = json.load(f)
