@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Use environment variables if set, otherwise use defaults
-DEFAULT_RUN_NAME=${DEFAULT_RUN_NAME:-"vila-qwen2-vl-7b-sft"}
+DEFAULT_RUN_NAME=${DEFAULT_RUN_NAME:-"NVILA-2B-finetune"}
 DEFAULT_GLOBAL_TRAIN_BATCH_SIZE=${DEFAULT_GLOBAL_TRAIN_BATCH_SIZE:-2048}
 DEFAULT_GRADIENT_ACCUMULATION_STEPS=${DEFAULT_GRADIENT_ACCUMULATION_STEPS:-2}
 
@@ -41,14 +41,14 @@ torchrun \
         --image_aspect_ratio dynamic \
         --bf16 True \
         --output_dir $OUTPUT_DIR/model \
-        --num_train_epochs 1 \
+        --num_train_epochs 3 \
         --per_device_train_batch_size $PER_DEVICE_TRAIN_BATCH_SIZE \
         --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
         --evaluation_strategy no \
         --save_strategy steps \
         --save_steps 100 \
         --save_total_limit 1 \
-        --learning_rate 3e-5 \
+        --learning_rate 2e-4 \
         --weight_decay 0. \
         --warmup_ratio 0.03 \
         --lr_scheduler_type cosine \
@@ -63,8 +63,9 @@ torchrun \
         --group_by_modality_length True \
         --lora_enable True \
         --lora_llm True \
-        --lora_r 16 \
-        --lora_alpha 32 \
+        --lora_r 64 \
+        --lora_alpha 128 \
         --lora_dropout 0.05 \
         --lora_bias none \
-        --report_to wandb
+        --report_to wandb \
+        --resume_from_checkpoint runs/train/nvila-lite-2b-exercise-finetune/model/checkpoint-1875
