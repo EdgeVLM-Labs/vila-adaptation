@@ -34,4 +34,9 @@ python "$QVED_DIR/copy_data_to_videos_dir.py" "$DATASET_ROOT_DIR" "$VIDEOS_DIR"
 # 6. Split dataset
 python "$QVED_DIR/split_dataset.py" "$CONVERTED_JSON" "$TRAIN_JSON" "$VAL_JSON" "$TEST_JSON"
 
+# 7. Augment videos (NEW)
+echo "Starting video augmentation..."
+python "$QVED_DIR/augment_videos.py" --input "$VIDEOS_DIR" --output "$VIDEOS_DIR/augmented" --augmentations "1,3,5,6,8"
+echo "Video augmentation completed."
+
 echo "All dataset preparation steps completed."

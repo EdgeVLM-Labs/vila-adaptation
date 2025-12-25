@@ -62,6 +62,13 @@ pip install protobuf==3.20.*
 pip install peft==0.10.0
 pip install triton==3.1.0
 
+# Install vidaug for video augmentation
+pip install vidaug
+
+# Install additional dependencies for video processing
+pip install opencv-python-headless
+pip install pillow
+
 git clone https://github.com/NVlabs/PS3.git
 cd PS3
 pip install -e .
