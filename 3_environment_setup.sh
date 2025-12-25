@@ -1,26 +1,63 @@
-# Optimized for 48GB GPU - can handle larger batch sizes
-export DEFAULT_RUN_NAME="NVILA-2B-finetune"
-export DEFAULT_GLOBAL_TRAIN_BATCH_SIZE=16  
-export DEFAULT_GRADIENT_ACCUMULATION_STEPS=4
-export FP16=true
-export DEFAULT_GPUS_PER_NODE=1
+#!/usr/bin/env bash
+set -e
 
-export WANDB_PROJECT="NVILA"
-export WANDB_NAME="finetune-nvila-2b-qved"
+# CONDA_ENV=${1:-""}
+# if [ -n "$CONDA_ENV" ]; then
+#     # This is required to activate conda environment
+#     eval "$(conda shell.bash hook)"
 
-# Add validation dataset support (optional)
-export EVAL_DATA_MIXTURE="QVED-dataset-val"  # Validation dataset
-export EVAL_STEPS=50  # Evaluate every 50 steps
-export SAVE_STEPS=100  # Save every 100 steps
-export EVALUATION_STRATEGY="steps"  # Enable evaluation
+#     conda create -n $CONDA_ENV python=3.10.14 -y
+#     conda activate $CONDA_ENV
+#     # This is optional if you prefer to use built-in nvcc
+#     conda install -c nvidia cuda-toolkit -y
+# else
+#     echo "Skipping conda environment creation. Make sure you have the correct environment activated."
+# fi
 
-# Fine-tune NVILA-Lite-2B
-bash scripts/NVILA-Lite/sft.sh \
-    Efficient-Large-Model/NVILA-Lite-2B \
-    QVED-dataset \
-    runs/train/nvila-2b-exercise-finetune \
-    --fp16
 
-# Upload to Hugging Face after training
-echo "Training completed. Uploading model to Hugging Face..."
-huggingface-cli upload EdgeVLM-Labs/NVILA-Lite-2B-finetuned-500 runs/train/nvila-2b-exercise-finetune/model --include="*"
+# echo ">>> Activating environment..."
+# conda activate vila
+
+# -------------------------------
+# Install dependencies
+# -------------------------------
+# echo ">>> Installing CUDA Toolkit..."
+# conda install -c nvidia cuda-toolkit -y
+
+echo ">>> Installing PS3 Torch..."
+
+# pip install --upgrade pip
+# pip install ps3-torch
+pip install hf_transfer
+
+# This is required to enable PEP 660 support
+pip install --upgrade pip setuptools
+
+# Install FlashAttention2
+pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.8/flash_attn-2.5.8+cu122torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+# Install VILA
+pip install -e ".[train,eval]"
+
+# Quantization requires the newest triton version, and introduce dependency issue
+pip install triton==3.1.0
+
+# numpy introduce a lot dependencies issues, separate from pyproject.yaml
+pip install numpy==1.26.4
+
+# Install additional dependencies
+pip install bert-score
+
+# Install wandb
+pip install wandb
+
+# Replace transformers and deepspeed files
+site_pkg_path=$(python -c 'import site; print(site.getsitepackages()[0])')
+cp -rv ./llava/train/deepspeed_replace/* $site_pkg_path/deepspeed/
+
+# Downgrade protobuf to 3.20 for backward compatibility
+pip install protobuf==3.20.*
+
+# Install PEFT for LoRA support
+pip install peft==0.10.0
+pip install triton==3.1.0
