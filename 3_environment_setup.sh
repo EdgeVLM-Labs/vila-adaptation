@@ -61,3 +61,9 @@ pip install protobuf==3.20.*
 # Install PEFT for LoRA support
 pip install peft==0.10.0
 pip install triton==3.1.0
+
+git clone https://github.com/NVlabs/PS3.git
+cd PS3
+pip install -e .
+cd ..
+echo ">>> Environment setup completed."
