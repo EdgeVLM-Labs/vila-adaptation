@@ -5,6 +5,7 @@ export DEFAULT_GRADIENT_ACCUMULATION_STEPS=8
 export FP16=true
 export DEFAULT_GPUS_PER_NODE=1
 
+export WANDB_ENTITY="fyp-21"
 export WANDB_PROJECT="NVILA"
 export WANDB_NAME="finetune-nvila-2b-qved"
 
