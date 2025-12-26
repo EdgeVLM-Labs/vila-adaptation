@@ -5,9 +5,26 @@ DEFAULT_RUN_NAME=${DEFAULT_RUN_NAME:-"NVILA-2B-finetune"}
 DEFAULT_GLOBAL_TRAIN_BATCH_SIZE=${DEFAULT_GLOBAL_TRAIN_BATCH_SIZE:-2048}
 DEFAULT_GRADIENT_ACCUMULATION_STEPS=${DEFAULT_GRADIENT_ACCUMULATION_STEPS:-2}
 
+# Evaluation parameters
+EVAL_DATA_MIXTURE=${EVAL_DATA_MIXTURE:-""}
+EVAL_STEPS=${EVAL_STEPS:-50}
+EVALUATION_STRATEGY=${EVALUATION_STRATEGY:-"no"}
+
 STAGE_PATH=${1:-"runs/train/nvila-8b-pretrain/model"}
 DATA_MIXTURE=${2:-"nvila-pretrain"}
 OUTPUT_DIR=${3:-"runs/train/nvila-8b-sft"}
+
+# Setup logging
+mkdir -p logs
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="logs/finetune_${TIMESTAMP}.log"
+echo "========================================="
+echo "VILA Finetuning - Training Log"
+echo "========================================="
+echo "Logging all output to: $LOG_FILE"
+echo "Started at: $(date)"
+echo ""
+exec > >(tee -a "$LOG_FILE") 2>&1
 
 source scripts/setups/train.sh
 
@@ -19,9 +36,7 @@ if [ ! -z "$DEFAULT_GPUS_PER_NODE" ]; then
     PER_DEVICE_TRAIN_BATCH_SIZE=$((GLOBAL_TRAIN_BATCH_SIZE / NNODES / GPUS_PER_NODE / GRADIENT_ACCUMULATION_STEPS))
     echo "Recalculated PER_DEVICE_TRAIN_BATCH_SIZE = $PER_DEVICE_TRAIN_BATCH_SIZE"
 fi
-
 STAGE2_PATH=$1
-
 torchrun \
     --nnodes=$NNODES --nproc_per_node=$GPUS_PER_NODE --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT \
@@ -29,6 +44,7 @@ torchrun \
         --deepspeed scripts/zero3.json \
         --model_name_or_path $STAGE_PATH \
         --data_mixture $DATA_MIXTURE \
+        --eval_data_mixture $EVAL_DATA_MIXTURE \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \
         --mm_vision_select_feature cls_patch \
         --mm_projector mlp_downsample_3x3_fix \
@@ -40,22 +56,25 @@ torchrun \
         --mm_use_im_patch_token False \
         --image_aspect_ratio dynamic \
         --bf16 True \
+        --tf32 True \
         --output_dir $OUTPUT_DIR/model \
         --num_train_epochs 3 \
         --per_device_train_batch_size $PER_DEVICE_TRAIN_BATCH_SIZE \
         --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
-        --evaluation_strategy no \
+        --evaluation_strategy $EVALUATION_STRATEGY \
+        --eval_steps $EVAL_STEPS \
         --save_strategy steps \
-        --save_steps 100 \
-        --save_total_limit 1 \
+        --save_steps 20 \
+        --save_total_limit 3 \
         --learning_rate 2e-4 \
         --weight_decay 0. \
-        --warmup_ratio 0.03 \
+        --warmup_ratio 0.05 \
+        --max_grad_norm 1.0 \
         --lr_scheduler_type cosine \
         --logging_steps 1 \
         --model_max_length 2048 \
         --gradient_checkpointing True \
-        --dataloader_num_workers 4 \
+        --dataloader_num_workers 2 \
         --num_video_frames 4 \
         --fps 1.0 \
         --downsample_video True \
@@ -67,5 +86,12 @@ torchrun \
         --lora_alpha 128 \
         --lora_dropout 0.05 \
         --lora_bias none \
-        --report_to wandb \
-        --resume_from_checkpoint runs/train/nvila-lite-2b-exercise-finetune/model/checkpoint-1875
+        --report_to wandb
+
+echo ""
+echo "========================================="
+echo "Training completed at: $(date)"
+echo "========================================="
+echo "Log file saved to: $LOG_FILE"
+echo "Model saved to: $OUTPUT_DIR/model"
+echo ""
