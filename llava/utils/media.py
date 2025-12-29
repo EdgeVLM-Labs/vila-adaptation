@@ -69,7 +69,7 @@ def _load_video(video_path: str, *, num_frames: int, fps: float) -> List[PIL.Ima
         timestamps = np.arange(0, duration_sec, 1.0 / fps)
         timestamps = timestamps[:num_frames]  # Clamp
         indices = [int(t * video_fps) for t in timestamps]
-        logger.info(f"timestamps used: {timestamps} with frame numbers {indices}")
+        logger.debug(f"timestamps used: {timestamps} with frame numbers {indices}")
     else:
         indices = np.round(np.linspace(0, frame_count - 1, num_frames)).astype(int)
 
@@ -120,10 +120,10 @@ def extract_media(
                 text += MEDIA_TOKENS["image"]
             elif isinstance(part, Video):
                 if draft:
-                    media["image"].append(part)
+                    media["video"].append(part)
                 else:
-                    media["image"].extend(_extract_video(part, config))
-                text += MEDIA_TOKENS["image"] * config.num_video_frames
+                    media["video"].append(_extract_video(part, config))
+                text += MEDIA_TOKENS["video"]
             else:
                 raise ValueError(f"Unsupported prompt part type: {type(part)}")
         message["value"] = text

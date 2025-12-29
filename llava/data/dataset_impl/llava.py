@@ -56,7 +56,17 @@ class LLaVADataset(BaseDataset):
 
         if "video" in instance:
             for video_path in make_list(instance["video"]):
-                medias.append(Video(os.path.join(self.media_dir, video_path)))
+                full_path = os.path.join(self.media_dir, video_path)
+                # Validate video file exists before adding
+                if not os.path.exists(full_path):
+                    import logging
+                    logging.warning(f"Video file not found: {full_path}. Skipping this sample.")
+                    continue
+                medias.append(Video(full_path))
+
+        # Skip samples with no valid media for video datasets
+        if self.is_video and not medias:
+            raise ValueError(f"No valid videos found for sample. Will resample.")
 
         # Remove media tokens from messages
         for message in messages:

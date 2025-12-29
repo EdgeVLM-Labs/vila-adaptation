@@ -33,6 +33,7 @@ import transformers
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset, default_collate
 from transformers import PreTrainedTokenizer
+from llava.utils.logging import logger
 
 import llava.data.datasets_mixture as datasets_mixture
 from llava import conversation as conversation_lib
@@ -1811,6 +1812,18 @@ def make_supervised_data_module(
     train_dataset = build_dataset(data_args.data_mixture, data_args, training_args, tokenizer)
     training_args.sample_lens = [len(d) for d in train_dataset.datasets]
 
+    # Build evaluation dataset if eval_data_mixture is provided
+    eval_dataset = None
+    if data_args.eval_data_mixture:
+        logger.warning(f"Building evaluation dataset with mixture: {data_args.eval_data_mixture}")
+        eval_dataset = build_dataset(data_args.eval_data_mixture, data_args, training_args, tokenizer)
+        training_args.eval_sample_lens = [len(d) for d in eval_dataset.datasets]
+        logger.warning(f"Evaluation dataset built with {len(eval_dataset)} samples")
+        logger.warning(f"Eval sub-datasets: {[len(d) for d in eval_dataset.datasets]}")
+        logger.warning(f"Number of sub-datasets in eval: {len(eval_dataset.datasets)}")
+    else:
+        logger.warning("No eval_data_mixture provided, skipping evaluation dataset")
+
     PROCESS_GROUP_MANAGER = get_pg_manager()
     if PROCESS_GROUP_MANAGER is None:
         data_collator = DataCollator(tokenizer=tokenizer)
@@ -1829,7 +1842,12 @@ def make_supervised_data_module(
             ring_type=ring_type,
         )
 
-    return dict(
+    result = dict(
         train_dataset=train_dataset,
         data_collator=data_collator,
     )
+
+    if eval_dataset is not None:
+        result['eval_dataset'] = eval_dataset
+
+    return result

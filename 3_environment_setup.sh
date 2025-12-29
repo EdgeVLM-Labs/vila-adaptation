@@ -21,37 +21,72 @@ set -e
 # -------------------------------
 # Install dependencies
 # -------------------------------
+
 # echo ">>> Installing CUDA Toolkit..."
 # conda install -c nvidia cuda-toolkit -y
 
-echo ">>> Installing PS3 Torch..."
-
+echo ">>> Installing base dependencies..."
 # pip install --upgrade pip
-# pip install ps3-torch
-pip install hf_transfer
 
-# This is required to enable PEP 660 support
+# Enable PEP 660 support
 pip install --upgrade pip setuptools
 
-# Install FlashAttention2
+echo ">>> Installing HuggingFace transfer..."
+pip install hf_transfer
+
+# Install PS3 Torch
+# pip install ps3-torch
+
+echo ">>> Installing FlashAttention2..."
 pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.8/flash_attn-2.5.8+cu122torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 
-# Install VILA
+echo ">>> Installing VILA..."
 pip install -e ".[train,eval]"
 
-# Quantization requires the newest triton version, and introduce dependency issue
+echo ">>> Installing additional dependencies..."
+# Quantization requires the newest triton version
 pip install triton==3.1.0
 
-# numpy introduce a lot dependencies issues, separate from pyproject.yaml
-# pip install numpy==1.26.4
+# numpy - fix dependency issues
+pip install numpy==1.26.4
 
-# Replace transformers and deepspeed files
-site_pkg_path=$(python -c 'import site; print(site.getsitepackages()[0])')
-cp -rv ./llava/train/deepspeed_replace/* $site_pkg_path/deepspeed/
+# Evaluation dependencies
+pip install bert-score
+pip install wandb
 
-# Downgrade protobuf to 3.20 for backward compatibility
+# Downgrade protobuf for backward compatibility
 pip install protobuf==3.20.*
 
 # Install PEFT for LoRA support
 pip install peft==0.10.0
-pip install triton==3.1.0
+
+echo ">>> Installing video processing dependencies..."
+# Video augmentation
+pip install vidaug
+pip install opencv-python-headless
+pip install pillow
+pip install scikit-image  # Required by vidaug
+
+echo ">>> Installing PS3..."
+git clone https://github.com/NVlabs/PS3.git
+cd PS3
+pip install -e .
+cd ..
+
+echo ">>> Installing evaluation and report generation libraries..."
+pip install openpyxl
+pip install scikit-learn
+pip install evaluate
+pip install sentence-transformers
+
+echo ">>> Replacing transformers and deepspeed files..."
+site_pkg_path=$(python -c 'import site; print(site.getsitepackages()[0])')
+cp -rv ./llava/train/deepspeed_replace/* $site_pkg_path/deepspeed/
+
+echo "🔑 Logging into WandB..."
+wandb login
+
+echo "🤗 Logging into HuggingFace Hub..."
+huggingface-cli login
+
+echo "✅ Environment setup completed successfully!"
