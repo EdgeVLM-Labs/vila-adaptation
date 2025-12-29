@@ -7,6 +7,9 @@ DATASET_DIR="$SCRIPT_DIR/llava/data/registry/datasets/dataset"
 # Python script path
 PYTHON_SCRIPT="$SCRIPT_DIR/llava/inference/generate_test_report.py"
 
+# Model path
+MODEL_PATH="Efficient-Large-Model/VILA1.5-3b"
+
 # Input: predictions JSON file (output from your inference script)
 # This should contain the model predictions you want to evaluate
 PREDICTIONS_JSON="$DATASET_DIR/test_predictions.json"
@@ -25,6 +28,7 @@ echo "=================================================="
 echo "Script Directory: $SCRIPT_DIR"
 echo "Dataset Directory: $DATASET_DIR"
 echo "Predictions File: $PREDICTIONS_JSON"
+echo "Model Path: $MODEL_PATH"
 echo "Output Excel: $OUTPUT_EXCEL"
 echo "Output CSV: $OUTPUT_CSV"
 echo "Use BERT: $USE_BERT"
@@ -52,7 +56,7 @@ if [ ! -f "$PYTHON_SCRIPT" ]; then
 fi
 
 # Build command with flags
-CMD="python \"$PYTHON_SCRIPT\" --predictions \"$PREDICTIONS_JSON\" --output \"$OUTPUT_EXCEL\" --csv-output \"$OUTPUT_CSV\""
+CMD="python \"$PYTHON_SCRIPT\" --predictions \"$PREDICTIONS_JSON\" --output \"$OUTPUT_EXCEL\" --csv-output \"$OUTPUT_CSV\" --model-path \"$MODEL_PATH\""
 
 if [ "$USE_BERT" = false ]; then
     CMD="$CMD --no-bert"
