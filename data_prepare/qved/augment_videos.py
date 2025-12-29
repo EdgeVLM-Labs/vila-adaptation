@@ -4,19 +4,35 @@ Video Augmentation Script for QVED Dataset
 Uses vidaug library to apply various augmentation techniques to exercise videos.
 """
 
+import sys
+
+# Check for required dependencies
+try:
+    import skimage
+except ImportError:
+    print("Error: scikit-image is not installed.")
+    print("Please install it with: pip install scikit-image")
+    sys.exit(1)
+
+try:
+    import vidaug.augmentors as va
+except ImportError:
+    print("Error: vidaug is not installed.")
+    print("Please install it with: pip install vidaug")
+    sys.exit(1)
+
 import json
 import cv2
 import numpy as np
 from pathlib import Path
-import vidaug.augmentors as va
 from PIL import Image, ImageFilter
-import sys
 
-# Base directory
-BASE_DIR = Path(__file__).parent.parent / "dataset"
-GROUND_TRUTH_FILE = BASE_DIR / "fine_grained_labels.json"
-MANIFEST_FILE = BASE_DIR / "manifest.json"
-OUTPUT_GROUND_TRUTH_FILE = BASE_DIR / "ground_truth.json"
+# Base directory - dataset is at /workspace/vila-adaptation/llava/data/registry/datasets/dataset
+BASE_DIR = Path("/workspace/vila-adaptation/llava/data/registry/datasets/dataset")
+VIDEOS_DIR = BASE_DIR / "videos"
+GROUND_TRUTH_FILE = Path("/workspace/vila-adaptation/llava/data/registry/datasets/fine_grained_labels.json")
+MANIFEST_FILE = Path("/workspace/vila-adaptation/llava/data/registry/datasets/manifest.json")
+OUTPUT_GROUND_TRUTH_FILE = Path("/workspace/vila-adaptation/llava/data/registry/datasets/ground_truth.json")
 
 # Define available augmentations with numbers
 AUGMENTATION_OPTIONS = {
@@ -203,51 +219,106 @@ def main():
     print("Video Augmentation Tool for QVED Dataset")
     print("="*60)
 
-    # Get list of exercise folders
-    exercise_folders = sorted([d for d in BASE_DIR.iterdir() if d.is_dir() and (d / "*.mp4" or list(d.glob("*.mp4")))])
+    # Check if dataset directory exists
+    if not BASE_DIR.exists():
+        print(f"❌ Error: Dataset directory not found at {BASE_DIR}")
+        print(f"   Current script location: {Path(__file__).resolve()}")
+        print(f"   Looking for dataset at: {BASE_DIR.resolve()}")
+        print("\nPlease ensure the dataset directory exists or update BASE_DIR in the script.")
+        sys.exit(1)
 
-    if not exercise_folders:
-        print("❌ No exercise folders found in dataset directory!")
-        return
+    # Check if videos directory exists
+    if not VIDEOS_DIR.exists():
+        print(f"❌ Error: Videos directory not found at {VIDEOS_DIR}")
+        print("\nPlease ensure the videos directory exists.")
+        sys.exit(1)
 
-    # Display video counts
-    print("\nExercise folders and video counts:")
-    print("-" * 60)
-    for idx, folder in enumerate(exercise_folders, 1):
-        video_count = len(list(folder.glob("*.mp4")))
-        print(f"  {idx}. {folder.name:<40} ({video_count} videos)")
-    print("-" * 60)
+    # Check if videos are directly in VIDEOS_DIR or in subfolders
+    direct_videos = sorted(list(VIDEOS_DIR.glob("*.mp4")))
+    exercise_folders = sorted([d for d in VIDEOS_DIR.iterdir() if d.is_dir() and list(d.glob("*.mp4"))])
 
-    # Let user choose folders to augment
-    print("\nEnter the indices of folders you want to augment (comma-separated)")
-    print("Example: 1,3,5 or just press Enter to augment all")
-    folder_input = input("Folder indices: ").strip()
-
-    if folder_input:
-        try:
-            selected_indices = [int(x.strip()) for x in folder_input.split(',')]
-            selected_folders = [exercise_folders[i-1] for i in selected_indices if 1 <= i <= len(exercise_folders)]
-        except (ValueError, IndexError):
-            print("❌ Invalid input! Please enter valid comma-separated numbers.")
-            return
+    if direct_videos:
+        # Videos are directly in the videos/ folder (flat structure)
+        print(f"\n✓ Found {len(direct_videos)} videos directly in videos directory")
+        print("   Using flat structure (all videos in videos/ folder)")
+        
+        # Group all videos under a single "all_videos" category
+        videos_by_category = {"all_videos": direct_videos}
+        
+    elif exercise_folders:
+        # Videos are organized in exercise subfolders
+        print(f"\n✓ Found {len(exercise_folders)} exercise folders")
+        videos_by_category = {}
+        
+        print("\nExercise folders and video counts:")
+        print("-" * 60)
+        for idx, folder in enumerate(exercise_folders, 1):
+            videos = sorted(list(folder.glob("*.mp4")))
+            videos_by_category[folder.name] = videos
+            print(f"  {idx}. {folder.name:<40} ({len(videos)} videos)")
+        print("-" * 60)
     else:
-        selected_folders = exercise_folders
-
-    print(f"\n✓ Selected {len(selected_folders)} folder(s) for augmentation")
+        print("❌ No videos found in videos directory!")
+        print(f"   Searched in: {VIDEOS_DIR.resolve()}")
+        return
 
     # Display augmentation options
     display_augmentation_options()
 
+    # Ask which videos to augment
+    if len(videos_by_category) == 1 and "all_videos" in videos_by_category:
+        # Flat structure - ask how many videos to augment
+        total_videos = len(videos_by_category["all_videos"])
+        print(f"\nFound {total_videos} videos in flat structure")
+        print("Enter number of videos to augment (or 'all' for all videos):")
+        count_input = input("Number of videos: ").strip().lower()
+        
+        if count_input == 'all':
+            selected_videos = videos_by_category["all_videos"]
+        else:
+            try:
+                count = int(count_input)
+                selected_videos = videos_by_category["all_videos"][:count]
+            except ValueError:
+                print("❌ Invalid input!")
+                return
+        
+        videos_to_process = {"all_videos": selected_videos}
+        
+    else:
+        # Folder structure - let user choose folders
+        folder_names = list(videos_by_category.keys())
+        print("\nEnter the indices of folders you want to augment (comma-separated)")
+        print("Example: 1,3,5 or just press Enter to augment all")
+        folder_input = input("Folder indices: ").strip()
+
+        if folder_input:
+            try:
+                selected_indices = [int(x.strip()) for x in folder_input.split(',')]
+                videos_to_process = {
+                    folder_names[i-1]: videos_by_category[folder_names[i-1]] 
+                    for i in selected_indices if 1 <= i <= len(folder_names)
+                }
+            except (ValueError, IndexError):
+                print("❌ Invalid input! Please enter valid comma-separated numbers.")
+                return
+        else:
+            videos_to_process = videos_by_category
+
+        print(f"\n✓ Selected {len(videos_to_process)} folder(s) for augmentation")
+
     # Track all augmented videos for JSON update
     all_augmented_videos = []
 
-    # For each selected folder, ask for augmentation techniques
-    for folder in selected_folders:
+    # For each selected category/folder, ask for augmentation techniques
+    for category_name, videos in videos_to_process.items():
         print("\n" + "="*60)
-        print(f"Folder: {folder.name}")
+        if category_name == "all_videos":
+            print(f"Processing {len(videos)} videos from flat structure")
+        else:
+            print(f"Folder: {category_name}")
         print("="*60)
 
-        videos = sorted(list(folder.glob("*.mp4")))
         if not videos:
             print("No videos found, skipping...")
             continue
@@ -258,7 +329,7 @@ def main():
         aug_input = input("Augmentation indices: ").strip()
 
         if not aug_input:
-            print("No augmentations selected, skipping folder...")
+            print("No augmentations selected, skipping...")
             continue
 
         try:
@@ -275,15 +346,12 @@ def main():
                     print(f"Warning: Invalid augmentation index {idx}, skipping...")
 
             if not selected_augmentors:
-                print("No valid augmentations selected, skipping folder...")
+                print("No valid augmentations selected, skipping...")
                 continue
 
             print(f"\n✓ Will apply: {', '.join(aug_names)}")
 
-            # Create augmentation sequence
-            seq = va.Sequential(selected_augmentors)
-
-            # Process each video in the folder
+            # Process each video
             for video_path in videos:
                 # Generate output filename with augmentation index
                 for aug_idx in selected_aug_indices:
@@ -295,19 +363,28 @@ def main():
                     single_aug = va.Sequential([augmentor])
 
                     video_stem = video_path.stem
-                    output_filename = f"{video_stem}_{aug_idx}.mp4"
-                    output_path = folder / output_filename
+                    output_filename = f"{video_stem}_aug{aug_idx}.mp4"
+                    
+                    # Save in the same directory as the original
+                    output_path = video_path.parent / output_filename
 
                     # Apply augmentation
                     success = augment_video(video_path, single_aug, output_path)
 
                     if success:
                         # Track for JSON update
-                        relative_original = str(Path(folder.name) / video_path.name)
-                        relative_augmented = str(Path(folder.name) / output_filename)
+                        if category_name == "all_videos":
+                            # Flat structure: videos/filename.mp4
+                            json_original_path = f"videos/{video_path.name}"
+                            json_augmented_path = f"videos/{output_filename}"
+                        else:
+                            # Folder structure: videos/folder/filename.mp4
+                            json_original_path = f"videos/{category_name}/{video_path.name}"
+                            json_augmented_path = f"videos/{category_name}/{output_filename}"
+                        
                         all_augmented_videos.append({
-                            'original_path': relative_original,
-                            'augmented_path': relative_augmented
+                            'original_path': json_original_path,
+                            'augmented_path': json_augmented_path
                         })
 
         except ValueError:

@@ -102,25 +102,66 @@ def main(dataset_root, delete_bad):
     with open(gt_path, "r") as f:
         data = json.load(f)
 
-    cleaned = {}
-    removed = []
+    # Handle both dict and list formats
+    if isinstance(data, dict):
+        # Dictionary format: {label: [videos]}
+        cleaned = {}
+        removed = []
 
-    for label, videos in tqdm(data.items(), desc="Cleaning videos"):
-        valid_videos = []
+        for label, videos in tqdm(data.items(), desc="Cleaning videos"):
+            valid_videos = []
 
-        for video_path in videos:
-            video_path = Path(video_path)
-            ok, reason = is_video_valid(video_path)
+            for video_path in videos:
+                video_path = Path(video_path)
+                ok, reason = is_video_valid(video_path)
 
-            if ok:
-                valid_videos.append(str(video_path))
-            else:
-                removed.append((str(video_path), reason))
-                if delete_bad and video_path.exists():
-                    video_path.unlink()
+                if ok:
+                    valid_videos.append(str(video_path))
+                else:
+                    removed.append((str(video_path), reason))
+                    if delete_bad and video_path.exists():
+                        video_path.unlink()
 
-        if valid_videos:
-            cleaned[label] = valid_videos
+            if valid_videos:
+                cleaned[label] = valid_videos
+
+    elif isinstance(data, list):
+        # List format: [video_paths] or [{...}]
+        cleaned = []
+        removed = []
+
+        for item in tqdm(data, desc="Cleaning videos"):
+            # Handle list of strings (video paths)
+            if isinstance(item, str):
+                video_path = Path(item)
+                ok, reason = is_video_valid(video_path)
+
+                if ok:
+                    cleaned.append(item)
+                else:
+                    removed.append((item, reason))
+                    if delete_bad and video_path.exists():
+                        video_path.unlink()
+            
+            # Handle list of dicts
+            elif isinstance(item, dict):
+                # If dict has video path, validate it
+                if 'video' in item or 'path' in item:
+                    video_path = Path(item.get('video') or item.get('path'))
+                    ok, reason = is_video_valid(video_path)
+
+                    if ok:
+                        cleaned.append(item)
+                    else:
+                        removed.append((str(video_path), reason))
+                        if delete_bad and video_path.exists():
+                            video_path.unlink()
+                else:
+                    # Keep items that don't have video paths
+                    cleaned.append(item)
+
+    else:
+        raise ValueError(f"Unexpected data format: {type(data)}")
 
     # Save cleaned JSON
     with open(gt_path, "w") as f:
