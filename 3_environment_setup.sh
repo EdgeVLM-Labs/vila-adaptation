@@ -66,6 +66,10 @@ pip install vidaug
 pip install opencv-python-headless
 pip install pillow
 pip install scikit-image  # Required by vidaug
+pip install nltk==3.7
+pip install evaluate rouge-score
+python -m nltk.downloader wordnet omw-1.4
+
 
 echo ">>> Installing PS3..."
 git clone https://github.com/NVlabs/PS3.git
