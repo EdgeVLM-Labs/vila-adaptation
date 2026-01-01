@@ -77,9 +77,10 @@ torchrun \
     --tune_language_model True \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
-    --image_aspect_ratio dynamic \
+    --image_aspect_ratio pad \
     --bf16 True \
     --tf32 True \
+    --fp16 False \
     --output_dir $OUTPUT_DIR/model \
     --num_train_epochs 3 \
     --per_device_train_batch_size $PER_DEVICE_TRAIN_BATCH_SIZE \
@@ -91,14 +92,14 @@ torchrun \
     --save_steps 20 \
     --save_total_limit 3 \
     --learning_rate 5e-5 \
-    --warmup_ratio 0.1 \
+    --warmup_ratio 0.05 \
     --lr_scheduler_type cosine \
     --max_grad_norm 1.0 \
-    --logging_steps 5 \
+    --logging_steps 1 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 2 \
-    --num_video_frames 4 \
+    --num_video_frames 16 \
     --fps 1.0 \
     --downsample_video True \
     --vflan_no_system_prompt True \
