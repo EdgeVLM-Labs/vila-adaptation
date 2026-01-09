@@ -52,7 +52,7 @@ torchrun \
         --save_steps ${SAVE_STEPS:-30} \
         --save_total_limit 1 \
         --learning_rate 2e-4 \
-        --projector_lr 1e-4 \
+        --mm_projector_lr 1e-4 \
         --weight_decay 0. \
         --warmup_ratio 0.05 \
         --lr_scheduler_type cosine \
