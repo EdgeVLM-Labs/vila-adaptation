@@ -29,6 +29,7 @@ torchrun \
         --deepspeed scripts/zero3.json \
         --model_name_or_path $STAGE_PATH \
         --data_mixture $DATA_MIXTURE \
+        --eval_data_mixture ${EVAL_DATA_MIXTURE:-} \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \
         --mm_vision_select_feature cls_patch \
         --mm_projector mlp_downsample_3x3_fix \
@@ -41,30 +42,33 @@ torchrun \
         --image_aspect_ratio dynamic \
         --bf16 True \
         --output_dir $OUTPUT_DIR/model \
-        --num_train_epochs 1 \
+        --num_train_epochs 3 \
         --per_device_train_batch_size $PER_DEVICE_TRAIN_BATCH_SIZE \
+        --per_device_eval_batch_size ${PER_DEVICE_EVAL_BATCH_SIZE:-8} \
         --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
-        --evaluation_strategy no \
+        --evaluation_strategy ${EVALUATION_STRATEGY:-no} \
+        --eval_steps ${EVAL_STEPS:-30} \
         --save_strategy steps \
-        --save_steps 100 \
+        --save_steps ${SAVE_STEPS:-30} \
         --save_total_limit 1 \
-        --learning_rate 3e-5 \
+        --learning_rate 2e-4 \
+        --projector_lr 1e-4 \
         --weight_decay 0. \
-        --warmup_ratio 0.03 \
+        --warmup_ratio 0.05 \
         --lr_scheduler_type cosine \
         --logging_steps 1 \
         --model_max_length 2048 \
         --gradient_checkpointing True \
-        --dataloader_num_workers 4 \
-        --num_video_frames 4 \
+        --dataloader_num_workers 2 \
+        --num_video_frames 16 \
         --fps 1.0 \
         --downsample_video True \
         --vflan_no_system_prompt True \
         --group_by_modality_length True \
         --lora_enable True \
         --lora_llm True \
-        --lora_r 16 \
-        --lora_alpha 32 \
+        --lora_r 64 \
+        --lora_alpha 128 \
         --lora_dropout 0.05 \
         --lora_bias none \
         --report_to wandb
