@@ -22,6 +22,12 @@ fi
 
 STAGE2_PATH=$1
 
+# Build eval_data_mixture argument only if set
+EVAL_DATA_ARG=""
+if [ ! -z "$EVAL_DATA_MIXTURE" ]; then
+    EVAL_DATA_ARG="--eval_data_mixture $EVAL_DATA_MIXTURE"
+fi
+
 torchrun \
     --nnodes=$NNODES --nproc_per_node=$GPUS_PER_NODE --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT \
@@ -29,7 +35,7 @@ torchrun \
         --deepspeed scripts/zero3.json \
         --model_name_or_path $STAGE_PATH \
         --data_mixture $DATA_MIXTURE \
-        --eval_data_mixture ${EVAL_DATA_MIXTURE:-} \
+        $EVAL_DATA_ARG \
         --vision_tower Efficient-Large-Model/paligemma-siglip-so400m-patch14-448 \
         --mm_vision_select_feature cls_patch \
         --mm_projector mlp_downsample_3x3_fix \
