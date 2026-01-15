@@ -7,8 +7,9 @@ from transformers import LlamaTokenizer
 from llava.model.language_model.llava_llama import LlavaLlamaModel
 
 # Models
-base_model_id = "Efficient-Large-Model/VILA1.5-3b"
-lora_id = "EdgeVLM-Labs/VILA1.5-3B-finetuned-500"
+base_model_id = "Efficient-Large-Model/NVILA-Lite-2B"
+lora_id = "EdgeVLM-Labs/NVILA-with-1000-per-class"
+subfolder = ""
 
 # ✅ Correct tokenizer repo
 tokenizer_id = "lmsys/vicuna-7b-v1.5"
@@ -31,7 +32,8 @@ base_model = LlavaLlamaModel.from_pretrained(
 # Attach LoRA
 model = PeftModel.from_pretrained(
     base_model,
-    lora_id
+    lora_id,
+    subfolder=subfolder
 )
 
 # Merge LoRA into base
