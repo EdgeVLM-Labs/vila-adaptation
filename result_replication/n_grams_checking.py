@@ -256,16 +256,81 @@ class ExerciseEvaluationPipeline:
         logger.info("Processing complete")
         return df
     
-    def save_results(self, df: pd.DataFrame, output_path: str) -> None:
+    def create_per_exercise_breakdown(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Save results to CSV
+        Create per-exercise breakdown showing correct/total counts
         
         Args:
-            df: DataFrame with results
-            output_path: Output CSV path
+            df: DataFrame with evaluation results
+            
+        Returns:
+            DataFrame with per-exercise breakdown
         """
-        df.to_csv(output_path, index=False)
-        logger.info(f"Results saved to {output_path}")
+        logger.info("Creating per-exercise breakdown...")
+        
+        # Group by ground truth exercise
+        breakdown = df.groupby('gt_exercise').agg(
+            total_count=('exercise_identified_correctly', 'count'),
+            correct_count=('exercise_identified_correctly', 'sum')
+        ).reset_index()
+        
+        # Rename column for clarity
+        breakdown.rename(columns={'gt_exercise': 'Per-Exercise Breakdown'}, inplace=True)
+        
+        # Create the format "correct/total" similar to the image
+        breakdown['Count'] = breakdown.apply(
+            lambda row: f"{int(row['correct_count'])}/{int(row['total_count'])}", 
+            axis=1
+        )
+        
+        # Calculate accuracy percentage for each exercise
+        breakdown['Accuracy (%)'] = (breakdown['correct_count'] / breakdown['total_count'] * 100).round(2)
+        
+        # Select and reorder columns
+        breakdown = breakdown[['Per-Exercise Breakdown', 'Count', 'Accuracy (%)']]
+        
+        # Sort by exercise name
+        breakdown = breakdown.sort_values('Per-Exercise Breakdown').reset_index(drop=True)
+        
+        logger.info(f"Created breakdown for {len(breakdown)} exercises")
+        
+        return breakdown
+    
+    def save_results(self, df: pd.DataFrame, breakdown_df: pd.DataFrame, output_path: str) -> None:
+        """
+        Save results to Excel file with multiple sheets or separate CSV files
+        
+        Args:
+            df: DataFrame with detailed results
+            breakdown_df: DataFrame with per-exercise breakdown
+            output_path: Output file path
+        """
+        output_path = Path(output_path)
+        
+        # Try to save as Excel file with multiple sheets
+        try:
+            excel_path = output_path.with_suffix('.xlsx')
+            with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+                df.to_csv(output_path, index=False)
+                df.to_excel(writer, sheet_name='Detailed Results', index=False)
+                breakdown_df.to_excel(writer, sheet_name='Per-Exercise Breakdown', index=False)
+            
+            logger.info(f"Results saved to Excel file: {excel_path}")
+            logger.info(f"  - Sheet 1: Detailed Results")
+            logger.info(f"  - Sheet 2: Per-Exercise Breakdown")
+            
+        except ImportError:
+            # If openpyxl is not available, save as separate CSV files
+            logger.warning("openpyxl not available. Saving as separate CSV files.")
+            
+            # Save detailed results
+            df.to_csv(output_path, index=False)
+            logger.info(f"Detailed results saved to: {output_path}")
+            
+            # Save breakdown
+            breakdown_path = output_path.parent / f"{output_path.stem}_breakdown.csv"
+            breakdown_df.to_csv(breakdown_path, index=False)
+            logger.info(f"Per-exercise breakdown saved to: {breakdown_path}")
     
     def print_summary(self, df: pd.DataFrame) -> None:
         """
@@ -297,15 +362,28 @@ class ExerciseEvaluationPipeline:
         print(f"Model used: {self.SBERT_MODEL}")
         print("=" * 70 + "\n")
     
-    def run(self, output_path: str = None) -> pd.DataFrame:
+    def print_breakdown_summary(self, breakdown_df: pd.DataFrame) -> None:
+        """
+        Print per-exercise breakdown summary
+        
+        Args:
+            breakdown_df: DataFrame with per-exercise breakdown
+        """
+        print("\n" + "=" * 70)
+        print("PER-EXERCISE BREAKDOWN")
+        print("=" * 70)
+        print(breakdown_df.to_string(index=False))
+        print("=" * 70 + "\n")
+    
+    def run(self, output_path: str = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Run the complete pipeline
         
         Args:
-            output_path: Path for output CSV (if None, auto-generates)
+            output_path: Path for output file (if None, auto-generates)
             
         Returns:
-            Processed DataFrame
+            Tuple of (detailed_results_df, breakdown_df)
         """
         # Step 1: Load data
         df = self.load_data()
@@ -316,33 +394,40 @@ class ExerciseEvaluationPipeline:
         # Step 3-6: Process all rows
         df = self.process_dataframe(df)
         
-        # Step 7: Save results
+        # Step 7: Create per-exercise breakdown
+        breakdown_df = self.create_per_exercise_breakdown(df)
+        
+        # Step 8: Save results
         if output_path is None:
             input_path = Path(self.csv_path)
             output_path = input_path.parent / f"{input_path.stem}_evaluated.csv"
         
-        self.save_results(df, output_path)
+        self.save_results(df, breakdown_df, output_path)
         
-        # Print summary
+        # Print summaries
         self.print_summary(df)
+        self.print_breakdown_summary(breakdown_df)
         
-        return df
+        return df, breakdown_df
 
 
 def main():
     """Main execution function"""
     # Configuration
-    INPUT_CSV = "your_input_file.csv"  # Change this to your CSV file path
-    OUTPUT_CSV = "exercise_evaluation_results.csv"  # Change this to desired output path
+    INPUT_CSV = "2_finetuned_inference_results.csv"  # Change this to your CSV file path
+    OUTPUT_CSV = "n_grams_exercise_evaluation_results.csv"  # Change this to desired output path
     
     # Run pipeline
     pipeline = ExerciseEvaluationPipeline(INPUT_CSV)
-    results_df = pipeline.run(OUTPUT_CSV)
+    results_df, breakdown_df = pipeline.run(OUTPUT_CSV)
     
     # Optional: Show sample results
-    print("\nSample Results (first 5 rows):")
+    print("\nSample Detailed Results (first 5 rows):")
     print(results_df[['video', 'gt_exercise', 'best_matching_ngram', 
                       'similarity_score', 'exercise_identified_correctly']].head())
+    
+    print("\nSample Breakdown (first 5 exercises):")
+    print(breakdown_df.head())
 
 
 if __name__ == "__main__":
