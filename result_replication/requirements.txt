@@ -1,0 +1,16 @@
+# Data handling
+pandas>=1.5
+numpy>=1.23
+
+# Evaluation metrics
+evaluate>=0.4.0
+nltk>=3.8.1
+rouge-score>=0.1.2
+absl-py>=1.4.0
+
+# Embeddings / BERT similarity
+sentence-transformers>=2.2.2
+scikit-learn>=1.2.0
+
+# Excel reporting
+openpyxl>=3.1.2

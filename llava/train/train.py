@@ -575,6 +575,12 @@ def train():
     if training_args.use_one_logger:
         one_logger_callback_utils.on_model_init_end()
 
+    # Ensure model embeddings match tokenizer size after media tokens have been added
+    tokenizer = model.tokenizer
+    if len(tokenizer) > model.get_llm().get_input_embeddings().weight.shape[0]:
+        logger.info(f"Resizing model embeddings from {model.get_llm().get_input_embeddings().weight.shape[0]} to {len(tokenizer)}")
+        model.resize_token_embeddings(len(tokenizer))
+
     if not resume_path or training_args.lora_enable:
         if model_args.mlp_path is not None:
             state_dict = torch.load(model_args.mlp_path, map_location="cpu")

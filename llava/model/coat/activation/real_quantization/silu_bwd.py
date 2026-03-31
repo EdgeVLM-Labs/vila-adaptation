@@ -19,7 +19,10 @@ import torch
 # 4 block
 import triton
 import triton.language as tl
-from triton.language.extra.cuda import libdevice
+try:
+    from triton.language.extra.cuda import libdevice
+except ImportError:
+    libdevice = None
 
 from ._division_transpose import fp8_division_transpose
 from .common import FP8_MAX_VALUE, SCALE_MIN_THRES, convert_str_to_fp8, get_configs_io_block

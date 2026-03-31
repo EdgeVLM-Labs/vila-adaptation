@@ -43,6 +43,25 @@ def tokenize_conversation_legacy(
     no_system_prompt: bool = False,
 ) -> torch.Tensor:
     conv = default_conversation.copy()
+    
+    # If the conversation style is AUTO, we need to infer the correct template
+    if conv.sep_style == SeparatorStyle.AUTO:
+        # Import here to avoid circular imports
+        from .conversation import conv_templates
+        
+        # Try to infer from tokenizer's special tokens
+        special_tokens = set(tokenizer.all_special_tokens)
+        
+        # Check for llama-3 style tokens
+        if any(token in special_tokens for token in ['<|begin_of_text|>', '<|start_header_id|>', '<|end_header_id|>', '<|eot_id|>']):
+            conv = conv_templates["llama_3"].copy()
+        # Check for hermes-2 style tokens  
+        elif '<|im_start|>' in special_tokens or '<|im_end|>' in special_tokens:
+            conv = conv_templates["hermes-2"].copy()
+        # Default to vicuna_v1 for models without specific markers
+        else:
+            conv = conv_templates["vicuna_v1"].copy()
+    
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
     if no_system_prompt:
@@ -81,6 +100,16 @@ def tokenize_conversation(
     # Normalize the conversation before tokenization
     for message in messages:
         message["value"] = message["value"].strip()
+
+    # Check if tokenizer has chat_template attribute, if not fall back to legacy mode
+    if not hasattr(tokenizer, 'chat_template') or tokenizer.chat_template is None:
+        return tokenize_conversation_legacy(
+            messages,
+            tokenizer,
+            add_generation_prompt=add_generation_prompt,
+            overrides=overrides,
+            no_system_prompt=no_system_prompt,
+        )
 
     if default_conversation.sep_style != SeparatorStyle.AUTO:
         return tokenize_conversation_legacy(
